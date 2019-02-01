@@ -249,17 +249,12 @@ public class NoteServer {
                         String refersTo = null;
                         // check if the color is one of the request conditions
                         int strt = clientMessage.indexOf("color=");
-                        int space = clientMessage.indexOf(" ", strt);
 
                         // if color not found then check for next request condition
                         if (strt != -1) {
-                            if (space != -1) {
-                                // if not the only condition then parse the color
-                                findColor = clientMessage.substring(strt + 6, space);
-                            } else {
-                                // if only condition parse the color given
-                                findColor = clientMessage.substring(strt + 6);
-                            }
+                              // if not the only condition then parse the color
+                                findColor = split[2];
+
                         }
                         // check if coordinates are one of the request conditions
                         int strtCoor = clientMessage.indexOf("contains=");
@@ -267,8 +262,8 @@ public class NoteServer {
                         if (strtCoor != -1) {
                             // parses the coordinates depending on if it is the only condition
                             if (strt != -1) {
-                                xc = strtol(split[3]);
-                                yc = strtol(split[4]);
+                                xc = strtol(split[4]);
+                                yc = strtol(split[5]);
                             } else {
                                 xc = strtol(split[2]);
                                 yc = strtol(split[3]);
@@ -278,7 +273,7 @@ public class NoteServer {
                         int strtWord = clientMessage.indexOf("refersTo=");
                         if (strtWord != -1) {
                             // parses the string to search for
-                            refersTo = clientMessage.substring(strtWord + 9);
+                            refersTo = clientMessage.substring(strtWord + 10);
                         }
                         // calls function to return notes that meeet the 4 requirements
                         Note[] result = a.getNotes(findColor, xc, yc, refersTo);
@@ -296,8 +291,8 @@ public class NoteServer {
 
                     case "PIN":
                         // outputs the result, either Pin Added or Pin already exists
-                        if (split.length == 2) {
-                            out.println(a.changePin(strtol(split[1].substring(0, 1)), strtol(split[1].substring(2, 3)),
+                        if (split.length == 3) {
+                            out.println(a.changePin(strtol(split[1]), strtol(split[2]),
                                     true));
                         } else {
                             out.println("Improper Command");
@@ -307,8 +302,8 @@ public class NoteServer {
 
                     case "UNPIN":
                         // outputs the result, either Pin Removed or Pin not found
-                        if (split.length == 2) {
-                            out.println(a.changePin(strtol(split[1].substring(0, 1)), strtol(split[1].substring(2, 3)),
+                        if (split.length == 3) {
+                            out.println(a.changePin((strtol(split[1])), strtol(split[2]),
                                     false));
                         } else {
                             out.println("Improper Command");
