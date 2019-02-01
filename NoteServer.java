@@ -42,7 +42,7 @@ public class NoteServer {
         ArrayList<Pin> pin = new ArrayList<Pin>();
 
         // constructor for the note, assumes zero pins are in it.
-        public Note(int xCoor, int yCoor, int height, int width, String color, String post) {
+        public Note(int xCoor, int yCoor, int width, int height, String color, String post) {
             this.xCoor = xCoor;
             this.yCoor = yCoor;
             this.color = color;
@@ -372,7 +372,7 @@ public class NoteServer {
 
     // function to create a new note and add it to the list of notes, in order based
     // on x and then y
-    public void newNote(int xCoor, int yCoor, int height, int width, String color, String post) {
+    public void newNote(int xCoor, int yCoor, int width, int height, String color, String post) {
         int i = 0;
         if (!notes.isEmpty()) {
             while (i < notes.size() && notes.get(i).getXCoor() < xCoor) {
@@ -383,7 +383,7 @@ public class NoteServer {
             }
 
         }
-        notes.add(i, new Note(xCoor, yCoor, height, width, color, post));
+        notes.add(i, new Note(xCoor, yCoor, width, height, color, post));
         return;
     }
 
