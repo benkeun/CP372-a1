@@ -39,7 +39,7 @@ public class NoteServer {
 
         // Status of the post and the number of pins in it.
         Boolean pinned;
-        int pins;
+        ArrayList<Pin> pin = new ArrayList<Pin>();
 
         // constructor for the note, assumes zero pins are in it.
         public Note(int xCoor, int yCoor, int height, int width, String color, String post) {
@@ -195,12 +195,12 @@ public class NoteServer {
                         }
                     }
                     changingList = true;
-                    clientChanging=connectionNum;
+                    clientChanging = connectionNum;
                     // reads request from client
                     String clientMessage = in.readLine();
 
                     if (clientMessage == null) {
-                        changingList=false;
+                        changingList = false;
                         break;
                     }
                     // splits clients message by spaces and performs a switch statement upon the
@@ -343,13 +343,13 @@ public class NoteServer {
                         out.println("Improper Command");
                         changingList = false;
                     }
-                    
+
                 }
 
             } catch (IOException e) {
                 print("Error with connection: " + connectionNum + ": " + e);
-                if (connectionNum==clientChanging){
-                    changingList=false;
+                if (connectionNum == clientChanging) {
+                    changingList = false;
                 }
             } finally {
                 try {
@@ -431,23 +431,27 @@ public class NoteServer {
                     && a.getYCoor() + a.getHeight() > yCoor) {
                 if (putIn) {
                     // adds pin
-                    a.pins++;
+                    a.pin.add(Pin(xCoor,yCoor));
                     if (a.getPin() == false) {
                         a.togglePin();
                     }
-                } else if (!putIn)
+                } else if (!putIn){
                     // remove pin
-                    a.pins--;
-                if (a.pins < 0) {
-                    a.pins = 0;
-                }
-                if (a.getPin() && a.pins == 0) {
+                    int k;
+                    for (k=0;k<a.pin.size()k++){
+                        if (a.pin.get(k).getXCoor()==xCoor&&a.pin.get(k).getYCoor()==yCoor){
+                            pins.remove(k);
+                            break;
+                        }
+                    }
+                if (a.getPin() && a.pin.size() == 0) {
                     a.togglePin();
                 }
+            }
 
             }
-        }
-        return;
+        }return;
+
     }
 
     // get notes based on the requirements
