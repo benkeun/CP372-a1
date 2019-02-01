@@ -186,17 +186,19 @@ public class NoteServer {
                     if (requestDisconnect) {
                         break;
                     }
+
+                    // reads request from client
+                    String clientMessage = in.readLine();
                     while (changingList) {
                         try {
-                            Thread.sleep(200);
+                            Thread.sleep(10);
+                            //System.out.println(connectionNum +" waiting");
                         } catch (InterruptedException ex) {
                             Thread.currentThread().interrupt();
                         }
                     }
                     changingList = true;
                     clientChanging = connectionNum;
-                    // reads request from client
-                    String clientMessage = in.readLine();
 
                     if (clientMessage == null) {
                         changingList = false;
@@ -204,11 +206,13 @@ public class NoteServer {
                     }
                     // splits clients message by spaces and performs a switch statement upon the
                     // first word in the request
-                    String[] split = clientMessage.split(" \n");
+                    String[] split = clientMessage.split("\\W+");
+                    System.out.println(split[0]);
                     switch (split[0]) {
 
                     // POST case is the client wishes to add a note to the board
                     case "POST":
+                        
                         // copies the message portion of the split array into a single array
                         if (split.length >= 6) {
                             String[] message = Arrays.copyOfRange(split, 6, split.length);
@@ -281,7 +285,7 @@ public class NoteServer {
                         if (result.length != 0) {
                             for (Note d : result) {
                                 // sends the results to the client
-                                out.println(d.toString());
+                                out.println(d.toString()+"\n");
                             }
                         } else {
                             // returns no matches
