@@ -12,7 +12,6 @@ import java.awt.event.ActionListener;
 public class NoteClient extends JFrame implements ActionListener {
     static JPanel connectPanel = new JPanel();
     static JPanel clientPanel = new JPanel();
-    static JPanel dialogPanel = new JPanel();
     static JButton connectButton = new JButton("Connect");
     static JButton getButton = new JButton("GET");
     static JButton pinButton = new JButton("PIN");
@@ -38,7 +37,8 @@ public class NoteClient extends JFrame implements ActionListener {
     static JTextField heightField = new JTextField("");
     static JTextField searchField = new JTextField("");
     static JTextArea resultsArea = new JTextArea("");
-    static JComboBox <String> colorComboBox = new JComboBox<>();
+    static JComboBox<String> colorComboBox = new JComboBox<>();
+
     static Socket connection = null;
     static BufferedReader in = null;
     static PrintWriter out = null;
@@ -85,10 +85,10 @@ public class NoteClient extends JFrame implements ActionListener {
         connectButton.addActionListener(this);
     }
 
-    public void clientPanelInit() {
+    public void clientPanelInit() throws Exception {
         add(clientPanel);
         clientPanel.setLayout(null);
-        this.setSize(500, 500);
+        this.setSize(615, 600);
         this.setTitle("Client");
 
         clientPanel.setLayout(null);
@@ -110,40 +110,48 @@ public class NoteClient extends JFrame implements ActionListener {
         clientPanel.add(widthField);
         clientPanel.add(heightField);
         clientPanel.add(searchField);
-        clientPanel.add( resultsArea);
+        clientPanel.add(resultsArea);
         clientPanel.add(colorComboBox);
         clientPanel.setVisible(true);
 
-        getButton.setBounds(300, 350, 170, 25);
+        getButton.setBounds(420, 440, 170, 30);
         getButton.setVisible(true);
 
-        pinButton.setBounds(300, 385, 80, 25);
+        pinButton.setBounds(420, 480, 80, 30);
         pinButton.setVisible(true);
 
-        unpinButton.setBounds(390, 385, 80, 25);
+        unpinButton.setBounds(510, 480, 80, 30);
         unpinButton.setVisible(true);
 
-        postButton.setBounds(300, 420, 170, 25);
+        postButton.setBounds(420, 520, 170, 30);
         postButton.setVisible(true);
 
         postLabel.setBounds(0, 0, 0, 0);
+        postLabel.setVisible(true);
 
-        resultsArea.setBounds(5,200,300,200);
+        resultsArea.setBounds(10, 350, 390, 200);
         resultsArea.setVisible(true);
         resultsArea.setEditable(false);
-
-        colorComboBox.setSize(50,50);
-        colorComboBox.setLocation(50,50);
+        boolean free = true;
+        resultsArea.setWrapStyleWord(free); // This is humorous because it is a play on words on freestyle rapping
+        colorComboBox.setBounds(420, 400, 170, 30);
         colorComboBox.setVisible(true);
-
+        colorComboBox.addItem("---color---");
+        String input = "";
+        int numLines = 0;
+        do {
+            String read = in.readLine();
+            input = input + read + "\n";
+            if (numLines >= 3) {
+                colorComboBox.addItem((String) read);
+            }
+            numLines++;
+        } while (in.ready());
+        resultsArea.setText(input);
         getButton.addActionListener(this);
         pinButton.addActionListener(this);
         unpinButton.addActionListener(this);
         postButton.addActionListener(this);
-    }
-
-    public void dialogPanelInit() {
-
     }
 
     public static void main(final String[] args) throws Exception {
@@ -151,71 +159,41 @@ public class NoteClient extends JFrame implements ActionListener {
     }
 
     public void actionPerformed(ActionEvent ae) {
-        try{
         String action = ae.getActionCommand();
-        
-        if (action.equals("Connect")) {
-            try {
-                connection = serverConnect(this.IPField.getText(), Integer.parseInt(this.portField.getText()));
-                this.in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-                this.out = new PrintWriter(connection.getOutputStream(), true);
+        try {
+            if (action.equals("Connect")) {
+                System.out.println("Flag");
+                Socket socket = new Socket(this.IPField.getText(), Integer.parseInt(this.portField.getText()));
+                connectPanel.setVisible(false);
+                System.out.println("Flag");
+                this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                this.out = new PrintWriter(socket.getOutputStream(), true);
+                System.out.println("Flag");
                 in.readLine();
                 out.println("wLMVtYaYORroH2ZRJgFdewUdRMaMWoXM3Tfr5r5CyKmUykVQYs77JZG8GNpj");
-                String input="";
-                int col=0;
-                do {
-                    String read= in.readLine();
-                    input= input+ read+"\n";
-                    if (col>=3){
-                        colorComboBox.addItem((String)read);
-                    }
-                    col++;
-                } while (in.ready());
-                resultsArea.setText(input);
-            } catch (Exception e) {
-                System.out.println("eror");
-                errorLabel.setText("Error occurred");
-            }
-        } else if (action.equals("GET")) {
-            out.println("GET");
-            resultsArea.setText(in.readLine());
-        } else if (action.equals("PIN")) {
+                clientPanelInit();
+            } else if (action.equals("GET")) {
+                String message = "GET ";
+                if(!colorComboBox.getText().equals("---color---")){
+                    message += "color="+colorComboBox.getText()+" ";
+                }
+                if(xField.getText().equals("")){
+                    message+=(String)Integer.parseInt(xField.getText()) + " ";
+                }
+                resultsArea.setText(in.readLine());
+                out.println(message);
+            } else if (action.equals("PIN")) {
+                out.printf("PIN %d %d", Integer.parseInt(xLabel.getText()), Integer.parseInt(yLabel.getText()));
+            } else if (action.equals("UNPIN")) {
+                
+            } else if (action.equals("POST")) {
 
-        } else if (action.equals("UNPIN")) {
-
-        } else if (action.equals("POST")) {
-
-        } else if (action.equals("DISCONNECT")) {
-            try{connection.close();
+            } else if (action.equals("DISCONNECT")) {
+                connection.close();
             }
-            catch(Exception e){
-                System.out.println("erorr");
-            }
-        }
-    }catch(Exception e) {
-        System.out.println("Unknown Error");
+        } catch (Exception e) {
+            System.out.println("eror");
+            resultsArea.setText("Input error");
+        } 
     }
-}
-
-    public Socket serverConnect(String serverAddress, int port) throws Exception {
-        Socket socket = new Socket(serverAddress, port);
-
-        // Streams for conversing with server
-
-        // Consume and display welcome message from the server
-        connectPanel.setVisible(false);
-
-        clientPanelInit();
-        // communicate();
-        return socket;
-    }
-    /*
-     * public void communicate(){ while (true) { try {
-     * System.out.println("\nEnter a request to send to the server (empty to quit):"
-     * ); String message = scanner.nextLine(); if (message == null ||
-     * message.isEmpty()) { break; } out.println(message); do {
-     * System.out.println(in.readLine()); } while (in.ready());
-     * 
-     * } catch (Exception e) { System.out.println("Server Closed"); break; } } }
-     */
 }
