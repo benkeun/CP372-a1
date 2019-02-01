@@ -50,7 +50,6 @@ public class NoteServer {
             this.width = width;
             this.post = post;
             this.pinned = false;
-            this.pins = 0;
         }
 
         // getters
@@ -431,14 +430,14 @@ public class NoteServer {
                     && a.getYCoor() + a.getHeight() > yCoor) {
                 if (putIn) {
                     // adds pin
-                    a.pin.add(Pin(xCoor,yCoor));
+                    a.pin.add(new Pin(xCoor,yCoor));
                     if (a.getPin() == false) {
                         a.togglePin();
                     }
                 } else if (!putIn){
                     // remove pin
                     int k;
-                    for (k=0;k<a.pin.size()k++){
+                    for (k=0;k<a.pin.size();k++){
                         if (a.pin.get(k).getXCoor()==xCoor&&a.pin.get(k).getYCoor()==yCoor){
                             pins.remove(k);
                             break;
