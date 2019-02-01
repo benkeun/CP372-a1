@@ -17,25 +17,24 @@ public class NoteClient extends JFrame implements ActionListener {
     static JButton pinButton = new JButton("PIN");
     static JButton unpinButton = new JButton("UNPIN");
     static JButton postButton = new JButton("POST");
+    static JButton displayButton = new JButton("DISPLAY");
     static JLabel IPLabel = new JLabel("IP Address");
     static JLabel portLabel = new JLabel("Port Number");
     static JLabel postLabel = new JLabel("Text to be Posted");
     static JLabel xLabel = new JLabel("X Coordinate");
     static JLabel yLabel = new JLabel("Y  Coordinate");
-    static JLabel colorLabel = new JLabel("Color");
     static JLabel widthLabel = new JLabel("Width");
     static JLabel heightLabel = new JLabel("Height");
     static JLabel searchLabel = new JLabel("Search for String");
-    static JLabel resultsLabel = new JLabel("Results");
     static JLabel errorLabel = new JLabel("ERROR:");
     static JTextField IPField = new JTextField("");
     static JTextField portField = new JTextField("");
-    static JTextField postField = new JTextField("");
     static JTextField xField = new JTextField("");
     static JTextField yField = new JTextField("");
     static JTextField widthField = new JTextField("");
     static JTextField heightField = new JTextField("");
-    static JTextField searchField = new JTextField("");
+    static JTextArea postArea = new JTextArea("");
+    static JTextArea searchArea = new JTextArea("");
     static JTextArea resultsArea = new JTextArea("");
     static JComboBox<String> colorComboBox = new JComboBox<>();
 
@@ -96,23 +95,34 @@ public class NoteClient extends JFrame implements ActionListener {
         clientPanel.add(pinButton);
         clientPanel.add(unpinButton);
         clientPanel.add(postButton);
+        clientPanel.add(displayButton);
         clientPanel.add(postLabel);
         clientPanel.add(xLabel);
         clientPanel.add(yLabel);
-        clientPanel.add(colorLabel);
         clientPanel.add(widthLabel);
         clientPanel.add(heightLabel);
         clientPanel.add(searchLabel);
-        clientPanel.add(resultsLabel);
-        clientPanel.add(postField);
         clientPanel.add(xField);
         clientPanel.add(yField);
         clientPanel.add(widthField);
         clientPanel.add(heightField);
-        clientPanel.add(searchField);
+        clientPanel.add(postArea);
+        clientPanel.add(searchArea);
         clientPanel.add(resultsArea);
         clientPanel.add(colorComboBox);
         clientPanel.setVisible(true);
+
+        postLabel.setBounds(10, 10, 350, 30);
+        postLabel.setVisible(true);
+
+        postArea.setBounds(10, 40, 350, 80);
+        postArea.setVisible(true);
+
+        searchLabel.setBounds(380, 10, 170, 30);
+        searchLabel.setVisible(true);
+
+        searchArea.setBounds(380, 40, 170, 80);
+        searchArea.setVisible(true);
 
         xLabel.setBounds(10, 130, 80, 30);
         xLabel.setVisible(true);
@@ -125,7 +135,7 @@ public class NoteClient extends JFrame implements ActionListener {
 
         heightLabel.setBounds(280, 130, 80, 30);
         heightLabel.setVisible(true);
-        
+
         xField.setBounds(10, 160, 80, 30);
         xField.setVisible(true);
 
@@ -143,8 +153,8 @@ public class NoteClient extends JFrame implements ActionListener {
         resultsArea.setEditable(false);
         boolean free = true;
         resultsArea.setWrapStyleWord(free); // This is humorous because it is a play on words on freestyle rapping
-        
-        colorComboBox.setBounds(380, 200, 170, 30);
+
+        colorComboBox.setBounds(380, 160, 170, 30);
         colorComboBox.setVisible(true);
         colorComboBox.addItem("---color---");
         String input = "";
@@ -159,30 +169,31 @@ public class NoteClient extends JFrame implements ActionListener {
         } while (in.ready());
         resultsArea.setText(input);
 
-        getButton.setBounds(380, 240, 170, 30);
+        getButton.setBounds(380, 200, 170, 30);
         getButton.setVisible(true);
 
-        pinButton.setBounds(380, 280, 80, 30);
+        pinButton.setBounds(380, 240, 80, 30);
         pinButton.setVisible(true);
 
-        unpinButton.setBounds(470, 280, 80, 30);
+        unpinButton.setBounds(470, 240, 80, 30);
         unpinButton.setVisible(true);
 
-        postButton.setBounds(380, 320, 170, 30);
+        postButton.setBounds(380, 280, 170, 30);
         postButton.setVisible(true);
 
-        postLabel.setBounds(0, 0, 0, 0);
-        postLabel.setVisible(true);
+        displayButton.setBounds(380, 320, 170, 30);
+        displayButton.setVisible(true);
 
-       
         getButton.addActionListener(this);
         pinButton.addActionListener(this);
         unpinButton.addActionListener(this);
         postButton.addActionListener(this);
+        displayButton.addActionListener(this);
     }
 
     public static void main(final String[] args) throws Exception {
         NoteClient mainView = new NoteClient();
+        connection.close();
     }
 
     public void actionPerformed(ActionEvent ae) {
@@ -205,8 +216,8 @@ public class NoteClient extends JFrame implements ActionListener {
                     message += "contains= " + Integer.parseInt(xField.getText()) + " "
                             + Integer.parseInt(yField.getText()) + " ";
                 }
-                if (!searchField.getText().equals("")) {
-                    message += "refersTo= " + searchField.getText() + " ";
+                if (!searchArea.getText().equals("")) {
+                    message += "refersTo= " + searchArea.getText() + " ";
                 }
                 out.println(message);
                 resultsArea.setText(in.readLine());
@@ -218,23 +229,22 @@ public class NoteClient extends JFrame implements ActionListener {
                 String message = null;
                 if (!xField.getText().equals("") && !yField.getText().equals("") && !widthField.getText().equals("")
                         && !heightField.getText().equals("")) {
-                    message = "POST" + Integer.parseInt(xField.getText()) + " " + Integer.parseInt(yField.getText())
+                    message = "POST " + Integer.parseInt(xField.getText()) + " " + Integer.parseInt(yField.getText())
                             + " " + Integer.parseInt(widthField.getText()) + " "
                             + Integer.parseInt(heightField.getText()) + " ";
-                    if (colorComboBox.getSelectedItem().equals("---color---")) {
-                        message += colorComboBox.getItemAt(1);
+                    if (((String) colorComboBox.getSelectedItem()).equals("---color---")) {
+                        message += (String) colorComboBox.getItemAt(1);
                     } else {
-                        message += colorComboBox.getSelectedItem();
+                        message += (String) colorComboBox.getSelectedItem();
                     }
-                }
-                else{
+                    message += " " + postArea.getText();
+                } else {
                     resultsArea.setText("Input error");
                 }
                 out.println(message);
                 resultsArea.setText(in.readLine());
-
-            } else if (action.equals("DISCONNECT")) {
-                connection.close();
+            } else if (action.equals("DISPLAY")) {
+                out.println("DISPLAY");
             }
         } catch (Exception e) {
             System.out.println("eror");
