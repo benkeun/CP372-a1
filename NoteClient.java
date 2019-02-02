@@ -1,15 +1,13 @@
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.Scanner;
 import javax.swing.*;
-import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class NoteClient extends JFrame implements ActionListener {
+    private static final long serialVersionUID = 1L;
     static JPanel connectPanel = new JPanel();
     static JPanel clientPanel = new JPanel();
     static JButton connectButton = new JButton("Connect");
@@ -30,8 +28,8 @@ public class NoteClient extends JFrame implements ActionListener {
     static JLabel searchLabel = new JLabel("Search for String");
     static JLabel errorLabel = new JLabel("");
     static boolean connect = false;
-    static JTextField IPField = new JTextField("");
-    static JTextField portField = new JTextField("");
+    static JTextField IPField = new JTextField("127.0.0.1");
+    static JTextField portField = new JTextField("4000");
     static JTextField xField = new JTextField("");
     static JTextField yField = new JTextField("");
     static JTextField widthField = new JTextField("");
@@ -40,6 +38,7 @@ public class NoteClient extends JFrame implements ActionListener {
     static JTextArea searchArea = new JTextArea("");
     static JTextArea resultsArea = new JTextArea("");
     static JComboBox<String> colorComboBox = new JComboBox<>();
+    static JScrollPane scrollPane = new JScrollPane(resultsArea);
 
     static Socket socket = null;
     static BufferedReader in = null;
@@ -113,7 +112,7 @@ public class NoteClient extends JFrame implements ActionListener {
         clientPanel.add(heightField);
         clientPanel.add(postArea);
         clientPanel.add(searchArea);
-        clientPanel.add(resultsArea);
+        clientPanel.add(scrollPane);
         clientPanel.add(colorComboBox);
         clientPanel.setVisible(true);
 
@@ -153,7 +152,9 @@ public class NoteClient extends JFrame implements ActionListener {
         heightField.setBounds(280, 160, 80, 30);
         heightField.setVisible(true);
 
-        resultsArea.setBounds(10, 200, 350, 150);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setVisible(true);
+        scrollPane.setBounds(10, 200, 350, 150);
         resultsArea.setVisible(true);
         resultsArea.setEditable(false);
         resultsArea.setLineWrap(true);
@@ -204,20 +205,23 @@ public class NoteClient extends JFrame implements ActionListener {
     }
 
     public static void main(final String[] args) throws Exception {
-        NoteClient mainView = new NoteClient();
+         new NoteClient();
     }
 
     public void actionPerformed(ActionEvent ae) {
         String action = ae.getActionCommand();
-        try {
-            if (action.equals("Connect")) {
-                connect=true;
-                socket = new Socket(this.IPField.getText(), Integer.parseInt(this.portField.getText()));
+        try{
+            if (action.equals("Connect")&&!connect) {
+                
+                int port=Integer.parseInt(portField.getText());
+                socket = new Socket(IPField.getText(),port);
                 connectPanel.setVisible(false);
-                this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                this.out = new PrintWriter(socket.getOutputStream(), true);
+                in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                out = new PrintWriter(socket.getOutputStream(), true);
                 in.readLine();
                 out.println("wLMVtYaYORroH2ZRJgFdewUdRMaMWoXM3Tfr5r5CyKmUykVQYs77JZG8GNpj");
+                connect = true;
+                errorLabel.setText("");
                 clientPanelInit();
             } else if (action.equals("GET")) {
                 String message = "GET ";
@@ -229,31 +233,51 @@ public class NoteClient extends JFrame implements ActionListener {
                             + Integer.parseInt(yField.getText()) + " ";
                 }
                 if (!searchArea.getText().equals("")) {
-                    message += "refersTo= " + searchArea.getText() + " ";
+                    message += "refersTo= " + searchArea.getText() + "";
                 }
+                
+                while(in.ready()){
+                    in.readLine();
+                }
+                
                 out.println(message);
+                
                 String messageBack = "";
+                
                 do {
                     messageBack += in.readLine() + "\n";
                 } while (in.ready());
                 resultsArea.setText(messageBack);
             } else if (action.equals("PIN")) {
+                while(in.ready()){
+                    in.readLine();
+                }
                 out.printf("PIN %d %d\n", Integer.parseInt(xField.getText()), Integer.parseInt(yField.getText()));
                 resultsArea.setText(in.readLine());
             } else if (action.equals("UNPIN")) {
+                while(in.ready()){
+                    in.readLine();
+                }
                 out.printf("UNPIN %d %d\n", Integer.parseInt(xField.getText()), Integer.parseInt(yField.getText()));
                 resultsArea.setText(in.readLine());
             } else if (action.equals("GET PINS")) {
+                while(in.ready()){
+                    in.readLine();
+                }
                 out.println("GET PINS");
                 String pins = "";
                 do {
-                    pins += in.readLine()+"\n";
+                    pins += in.readLine() + "\n";
                 } while (in.ready());
                 resultsArea.setText(pins);
             } else if (action.equals("POST")) {
-                String message = null;
+                while(in.ready()){
+                    in.readLine();
+                }
+                String message = "";
                 if (!xField.getText().equals("") && !yField.getText().equals("") && !widthField.getText().equals("")
                         && !heightField.getText().equals("")) {
+
                     message = "POST " + Integer.parseInt(xField.getText()) + " " + Integer.parseInt(yField.getText())
                             + " " + Integer.parseInt(widthField.getText()) + " "
                             + Integer.parseInt(heightField.getText()) + " ";
@@ -263,26 +287,42 @@ public class NoteClient extends JFrame implements ActionListener {
                         message += (String) colorComboBox.getSelectedItem();
                     }
                     message += " " + postArea.getText();
+                    out.println(message);
+                    resultsArea.setText(in.readLine());
                 } else {
                     resultsArea.setText("Input error");
                 }
-                out.println(message);
-                resultsArea.setText(in.readLine());
+
             } else if (action.equals("DISCONNECT")) {
+                while(in.ready()){
+                    in.readLine();
+                }
                 out.println("DISCONNECT");
                 socket.close();
                 in.close();
                 out.close();
                 clientPanel.setVisible(false);
                 connectPanelInit();
-                connect=false;
+                connect = false;
             } else if (action.equals("CLEAR")) {
+                while(in.ready()){
+                    in.readLine();
+                }
                 out.println("CLEAR");
                 resultsArea.setText(in.readLine());
             }
         } catch (Exception e) {
-            System.out.println("eror");
-            resultsArea.setText("Input error");
+            if(e instanceof NumberFormatException){
+                resultsArea.setText("Invalid Input");
+                if(!connect){
+                errorLabel.setText("Incorrect Format");
+                }
+           }else {
+               resultsArea.setText("Server has Shut Off");
+               if(!connect){
+               errorLabel.setText("No Server Running");
+               }
+           }
         }
     }
 }

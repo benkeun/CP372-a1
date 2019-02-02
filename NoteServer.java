@@ -6,8 +6,6 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
-import javax.lang.model.util.ElementScanner6;
-
 public class NoteServer {
     // global Lists for all the Notes and Pins that will be created
     static List<Note> notes = Collections.synchronizedList(new ArrayList<Note>());
@@ -241,7 +239,11 @@ public class NoteServer {
                                 for (Pin c : pins) {
                                     message += "(" + c.getXCoor() + "," + c.getYCoor() + ")\n";
                                 }
-                                out.println(message);
+                                if (message.equals("")) {
+                                    out.println("No Pins");
+                                } else {
+                                    out.println(message);
+                                }
                             } else {
                                 // sets the 3 search options to null
                                 String findColor = null;
@@ -290,10 +292,12 @@ public class NoteServer {
                                 changingList = false;
                                 break;
                             }
-                        } else {
+                        } else if (notes.size()>0){
                             for (Note n : notes) {
                                 out.println(n.toString());
                             }
+                        }else{
+                            out.println("No Notes Yet");
                         }
 
                     case "PIN":
