@@ -17,7 +17,8 @@ public class NoteClient extends JFrame implements ActionListener {
     static JButton pinButton = new JButton("PIN");
     static JButton unpinButton = new JButton("UNPIN");
     static JButton postButton = new JButton("POST");
-    static JButton displayButton = new JButton("DISPLAY");
+    static JButton clearButton = new JButton("CLEAR");
+    static JButton disconnectButton = new JButton("DISCONNECT");
     static JLabel IPLabel = new JLabel("IP Address");
     static JLabel portLabel = new JLabel("Port Number");
     static JLabel postLabel = new JLabel("Text to be Posted");
@@ -38,7 +39,7 @@ public class NoteClient extends JFrame implements ActionListener {
     static JTextArea resultsArea = new JTextArea("");
     static JComboBox<String> colorComboBox = new JComboBox<>();
 
-    static Socket connection = null;
+    static Socket socket = null;
     static BufferedReader in = null;
     static PrintWriter out = null;
 
@@ -95,7 +96,8 @@ public class NoteClient extends JFrame implements ActionListener {
         clientPanel.add(pinButton);
         clientPanel.add(unpinButton);
         clientPanel.add(postButton);
-        clientPanel.add(displayButton);
+        clientPanel.add(clearButton);
+        clientPanel.add(disconnectButton);
         clientPanel.add(postLabel);
         clientPanel.add(xLabel);
         clientPanel.add(yLabel);
@@ -153,9 +155,11 @@ public class NoteClient extends JFrame implements ActionListener {
         resultsArea.setEditable(false);
         boolean free = true;
         resultsArea.setWrapStyleWord(free); // This is humorous because it is a play on words on freestyle rapping
+        resultsArea.setLineWrap(true);
 
         colorComboBox.setBounds(380, 160, 170, 30);
         colorComboBox.setVisible(true);
+        colorComboBox.removeAllItems();
         colorComboBox.addItem("---color---");
         String input = "";
         int numLines = 0;
@@ -178,29 +182,32 @@ public class NoteClient extends JFrame implements ActionListener {
         unpinButton.setBounds(470, 240, 80, 30);
         unpinButton.setVisible(true);
 
-        postButton.setBounds(380, 280, 170, 30);
+        postButton.setBounds(380, 280, 80, 30);
         postButton.setVisible(true);
 
-        displayButton.setBounds(380, 320, 170, 30);
-        displayButton.setVisible(true);
+        clearButton.setBounds(470, 280, 80, 30);
+        clearButton.setVisible(true);
+
+        disconnectButton.setBounds(380, 320, 170, 30);
+        disconnectButton.setVisible(true);
 
         getButton.addActionListener(this);
         pinButton.addActionListener(this);
         unpinButton.addActionListener(this);
         postButton.addActionListener(this);
-        displayButton.addActionListener(this);
+        clearButton.addActionListener(this);
+        disconnectButton.addActionListener(this);
     }
 
     public static void main(final String[] args) throws Exception {
         NoteClient mainView = new NoteClient();
-        connection.close();
     }
 
     public void actionPerformed(ActionEvent ae) {
         String action = ae.getActionCommand();
         try {
             if (action.equals("Connect")) {
-                Socket socket = new Socket(this.IPField.getText(), Integer.parseInt(this.portField.getText()));
+                socket = new Socket(this.IPField.getText(), Integer.parseInt(this.portField.getText()));
                 connectPanel.setVisible(false);
                 this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 this.out = new PrintWriter(socket.getOutputStream(), true);
@@ -243,8 +250,16 @@ public class NoteClient extends JFrame implements ActionListener {
                 }
                 out.println(message);
                 resultsArea.setText(in.readLine());
-            } else if (action.equals("DISPLAY")) {
-                out.println("DISPLAY");
+            } else if (action.equals("DISCONNECT")) {
+                out.println("DISCONNECT"); 
+                socket.close();
+                in.close();
+                out.close();
+                clientPanel.setVisible(false);
+                connectPanelInit();
+            } else if (action.equals("CLEAR")){
+                out.println("CLEAR");
+                resultsArea.setText(in.readLine());
             }
         } catch (Exception e) {
             System.out.println("eror");
