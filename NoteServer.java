@@ -212,8 +212,8 @@ public class NoteServer {
                     // POST case is the client wishes to add a note to the board
                     case "POST":
                         // copies the message portion of the split array into a single array
-                        if (split.length >= 6 && strtol(split[1]) + strtol(split[3]) < brdWidth
-                                && strtol(split[2]) + strtol(split[4]) < brdHeight) {
+                        if (split.length >= 6 && strtol(split[1]) + strtol(split[3]) <= brdWidth
+                                && strtol(split[2]) + strtol(split[4]) <= brdHeight && !clientMessage.substring(0,clientMessage.indexOf(split[5])).contains("-")) {
                             String[] message = Arrays.copyOfRange(split, 6, split.length);
                             // creates a new note with the given coordinates and joins the message array
                             // into a single string
@@ -223,7 +223,7 @@ public class NoteServer {
                             // notifies server that the message was successfully posted
                             out.println("Message Posted");
                         } else {
-                            out.println("Improper command");
+                            out.println("Not on Board");
                         }
                         changingList = false;
                         break;
@@ -262,16 +262,19 @@ public class NoteServer {
                                 // check if coordinates are one of the request conditions
                                 int strtCoor = clientMessage.indexOf("contains=");
 
-                                if (strtCoor != -1) {
+                                if (strtCoor != -1 ) {
                                     // parses the coordinates depending on if it is the only condition
-                                    if (strt != -1) {
+                                    if (strt != -1 && !clientMessage.contains("-")) {
+                                        
                                         xc = strtol(split[4]);
                                         yc = strtol(split[5]);
-                                    } else {
+                                    } else if(!clientMessage.contains("-")) {
+                                       
                                         xc = strtol(split[2]);
                                         yc = strtol(split[3]);
-                                    }
-                                }
+                                 
+                                
+                                    }    }
                                 // checks if refersTo is one of the conditions
                                 int strtWord = clientMessage.indexOf("refersTo=");
                                 if (strtWord != -1) {
@@ -303,7 +306,14 @@ public class NoteServer {
                     case "PIN":
                         // outputs the result, either Pin Added or Pin already exists
                         if (split.length >= 3) {
+                            int x = strtol(split[1]);
+                            int y = strtol(split[2]);
+                            if(x>=0 && x<=brdWidth && y>=0 && y<=brdHeight){
                             out.println(a.changePin(strtol(split[1]), strtol(split[2]), true));
+                            }
+                            else{
+                                out.println("Not on Board");
+                            }
                         }
                         changingList = false;
                         break;

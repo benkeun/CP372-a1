@@ -224,6 +224,7 @@ public class NoteClient extends JFrame implements ActionListener {
                 errorLabel.setText("");
                 clientPanelInit();
             } else if (action.equals("GET")) {
+                boolean negative=false;
                 String message = "GET ";
                 if (!colorComboBox.getSelectedItem().equals("---color---")) {
                     message += "color= " + colorComboBox.getSelectedItem() + " ";
@@ -231,6 +232,9 @@ public class NoteClient extends JFrame implements ActionListener {
                 if (!xField.getText().equals("") && !yField.getText().equals("")) {
                     message += "contains= " + Integer.parseInt(xField.getText()) + " "
                             + Integer.parseInt(yField.getText()) + " ";
+                            if (message.contains("-")){
+                                negative=true;
+                            }
                 }
                 if (!searchArea.getText().equals("")) {
                     message += "refersTo= " + searchArea.getText() + "";
@@ -239,7 +243,7 @@ public class NoteClient extends JFrame implements ActionListener {
                 while(in.ready()){
                     in.readLine();
                 }
-                
+                if (!negative){
                 out.println(message);
                 
                 String messageBack = "";
@@ -247,7 +251,12 @@ public class NoteClient extends JFrame implements ActionListener {
                 do {
                     messageBack += in.readLine() + "\n";
                 } while (in.ready());
+                
                 resultsArea.setText(messageBack);
+            }
+            else{
+                resultsArea.setText("Not on Board");
+            }
             } else if (action.equals("PIN")) {
                 while(in.ready()){
                     in.readLine();
