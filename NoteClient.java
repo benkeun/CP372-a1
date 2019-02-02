@@ -16,6 +16,7 @@ public class NoteClient extends JFrame implements ActionListener {
     static JButton getButton = new JButton("GET");
     static JButton pinButton = new JButton("PIN");
     static JButton unpinButton = new JButton("UNPIN");
+    static JButton getPinsButton = new JButton("GET PINS");
     static JButton postButton = new JButton("POST");
     static JButton clearButton = new JButton("CLEAR");
     static JButton disconnectButton = new JButton("DISCONNECT");
@@ -27,7 +28,8 @@ public class NoteClient extends JFrame implements ActionListener {
     static JLabel widthLabel = new JLabel("Width");
     static JLabel heightLabel = new JLabel("Height");
     static JLabel searchLabel = new JLabel("Search for String");
-    static JLabel errorLabel = new JLabel("ERROR:");
+    static JLabel errorLabel = new JLabel("");
+    static boolean connect = false;
     static JTextField IPField = new JTextField("");
     static JTextField portField = new JTextField("");
     static JTextField xField = new JTextField("");
@@ -79,7 +81,7 @@ public class NoteClient extends JFrame implements ActionListener {
         portLabel.setBounds(130, 10, 80, 20);
         portLabel.setVisible(true);
 
-        errorLabel.setBounds(20, 60, 180, 20);
+        errorLabel.setBounds(20, 80, 180, 20);
         errorLabel.setVisible(true);
 
         connectButton.addActionListener(this);
@@ -95,6 +97,7 @@ public class NoteClient extends JFrame implements ActionListener {
         clientPanel.add(getButton);
         clientPanel.add(pinButton);
         clientPanel.add(unpinButton);
+        clientPanel.add(getPinsButton);
         clientPanel.add(postButton);
         clientPanel.add(clearButton);
         clientPanel.add(disconnectButton);
@@ -117,13 +120,13 @@ public class NoteClient extends JFrame implements ActionListener {
         postLabel.setBounds(10, 10, 350, 30);
         postLabel.setVisible(true);
 
-        postArea.setBounds(10, 40, 350, 80);
+        postArea.setBounds(10, 40, 350, 70);
         postArea.setVisible(true);
 
         searchLabel.setBounds(380, 10, 170, 30);
         searchLabel.setVisible(true);
 
-        searchArea.setBounds(380, 40, 170, 80);
+        searchArea.setBounds(380, 40, 170, 70);
         searchArea.setVisible(true);
 
         xLabel.setBounds(10, 130, 80, 30);
@@ -153,11 +156,9 @@ public class NoteClient extends JFrame implements ActionListener {
         resultsArea.setBounds(10, 200, 350, 150);
         resultsArea.setVisible(true);
         resultsArea.setEditable(false);
-        boolean free = true;
-        resultsArea.setWrapStyleWord(free); // This is humorous because it is a play on words on freestyle rapping
         resultsArea.setLineWrap(true);
 
-        colorComboBox.setBounds(380, 160, 170, 30);
+        colorComboBox.setBounds(380, 120, 170, 30);
         colorComboBox.setVisible(true);
         colorComboBox.removeAllItems();
         colorComboBox.addItem("---color---");
@@ -173,15 +174,17 @@ public class NoteClient extends JFrame implements ActionListener {
         } while (in.ready());
         resultsArea.setText(input);
 
-        getButton.setBounds(380, 200, 170, 30);
+        getButton.setBounds(380, 160, 170, 30);
         getButton.setVisible(true);
 
-        pinButton.setBounds(380, 240, 80, 30);
+        pinButton.setBounds(380, 200, 80, 30);
         pinButton.setVisible(true);
 
-        unpinButton.setBounds(470, 240, 80, 30);
+        unpinButton.setBounds(470, 200, 80, 30);
         unpinButton.setVisible(true);
 
+        getPinsButton.setBounds(380, 240, 170, 30);
+        getPinsButton.setVisible(true);
         postButton.setBounds(380, 280, 80, 30);
         postButton.setVisible(true);
 
@@ -194,6 +197,7 @@ public class NoteClient extends JFrame implements ActionListener {
         getButton.addActionListener(this);
         pinButton.addActionListener(this);
         unpinButton.addActionListener(this);
+        getPinsButton.addActionListener(this);
         postButton.addActionListener(this);
         clearButton.addActionListener(this);
         disconnectButton.addActionListener(this);
@@ -207,6 +211,7 @@ public class NoteClient extends JFrame implements ActionListener {
         String action = ae.getActionCommand();
         try {
             if (action.equals("Connect")) {
+                connect=true;
                 socket = new Socket(this.IPField.getText(), Integer.parseInt(this.portField.getText()));
                 connectPanel.setVisible(false);
                 this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -227,11 +232,24 @@ public class NoteClient extends JFrame implements ActionListener {
                     message += "refersTo= " + searchArea.getText() + " ";
                 }
                 out.println(message);
-                resultsArea.setText(in.readLine());
+                String messageBack = "";
+                do {
+                    messageBack += in.readLine() + "\n";
+                } while (in.ready());
+                resultsArea.setText(messageBack);
             } else if (action.equals("PIN")) {
-                out.printf("PIN %d %d", Integer.parseInt(xLabel.getText()), Integer.parseInt(yLabel.getText()));
+                out.printf("PIN %d %d\n", Integer.parseInt(xField.getText()), Integer.parseInt(yField.getText()));
+                resultsArea.setText(in.readLine());
             } else if (action.equals("UNPIN")) {
-                out.printf("UNPIN %d %d", Integer.parseInt(xLabel.getText()), Integer.parseInt(yLabel.getText()));
+                out.printf("UNPIN %d %d\n", Integer.parseInt(xField.getText()), Integer.parseInt(yField.getText()));
+                resultsArea.setText(in.readLine());
+            } else if (action.equals("GET PINS")) {
+                out.println("GET PINS");
+                String pins = "";
+                do {
+                    pins += in.readLine()+"\n";
+                } while (in.ready());
+                resultsArea.setText(pins);
             } else if (action.equals("POST")) {
                 String message = null;
                 if (!xField.getText().equals("") && !yField.getText().equals("") && !widthField.getText().equals("")
@@ -251,13 +269,14 @@ public class NoteClient extends JFrame implements ActionListener {
                 out.println(message);
                 resultsArea.setText(in.readLine());
             } else if (action.equals("DISCONNECT")) {
-                out.println("DISCONNECT"); 
+                out.println("DISCONNECT");
                 socket.close();
                 in.close();
                 out.close();
                 clientPanel.setVisible(false);
                 connectPanelInit();
-            } else if (action.equals("CLEAR")){
+                connect=false;
+            } else if (action.equals("CLEAR")) {
                 out.println("CLEAR");
                 resultsArea.setText(in.readLine());
             }

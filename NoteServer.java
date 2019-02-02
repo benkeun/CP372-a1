@@ -6,6 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
+import javax.lang.model.util.ElementScanner6;
+
 public class NoteServer {
     // global Lists for all the Notes and Pins that will be created
     static List<Note> notes = Collections.synchronizedList(new ArrayList<Note>());
@@ -42,7 +44,7 @@ public class NoteServer {
         ArrayList<Pin> pin = new ArrayList<Pin>();
 
         // constructor for the note, assumes zero pins are in it.
-        public Note(int xCoor, int yCoor, int width, int height, String color, String post) {
+        public Note(int xCoor, int yCoor, int height, int width, String color, String post) {
             this.xCoor = xCoor;
             this.yCoor = yCoor;
             this.color = color;
@@ -192,7 +194,7 @@ public class NoteServer {
                     while (changingList) {
                         try {
                             Thread.sleep(10);
-                            //System.out.println(connectionNum +" waiting");
+                            // System.out.println(connectionNum +" waiting");
                         } catch (InterruptedException ex) {
                             Thread.currentThread().interrupt();
                         }
@@ -207,14 +209,13 @@ public class NoteServer {
                     // splits clients message by spaces and performs a switch statement upon the
                     // first word in the request
                     String[] split = clientMessage.split("\\W+");
-                    System.out.println(split[0]);
                     switch (split[0]) {
 
                     // POST case is the client wishes to add a note to the board
                     case "POST":
-                        
                         // copies the message portion of the split array into a single array
-                        if (split.length >= 6) {
+                        if (split.length >= 6 && strtol(split[1]) + strtol(split[3]) < brdWidth
+                                && strtol(split[2]) + strtol(split[4]) < brdHeight) {
                             String[] message = Arrays.copyOfRange(split, 6, split.length);
                             // creates a new note with the given coordinates and joins the message array
                             // into a single string
@@ -236,77 +237,77 @@ public class NoteServer {
 
                             // checks if request is for pins and is so returns coordinates of all pins
                             if (split[1].equals("PINS")) {
-                                out.println("X,Y");
+                                String message = "";
                                 for (Pin c : pins) {
-                                    out.println("(" + c.getXCoor() + "," + c.getYCoor() + ")");
+                                    message += "(" + c.getXCoor() + "," + c.getYCoor() + ")\n";
                                 }
-                            }
-                        }
-                        // sets the 3 search options to null
-                        String findColor = null;
-                        int xc = -1;
-                        int yc = -1;
-                        String refersTo = null;
-                        // check if the color is one of the request conditions
-                        int strt = clientMessage.indexOf("color=");
-
-                        // if color not found then check for next request condition
-                        if (strt != -1) {
-                              // if not the only condition then parse the color
-                                findColor = split[2];
-
-                        }
-                        // check if coordinates are one of the request conditions
-                        int strtCoor = clientMessage.indexOf("contains=");
-
-                        if (strtCoor != -1) {
-                            // parses the coordinates depending on if it is the only condition
-                            if (strt != -1) {
-                                xc = strtol(split[4]);
-                                yc = strtol(split[5]);
+                                out.println(message);
                             } else {
-                                xc = strtol(split[2]);
-                                yc = strtol(split[3]);
-                            }
-                        }
-                        // checks if refersTo is one of the conditions
-                        int strtWord = clientMessage.indexOf("refersTo=");
-                        if (strtWord != -1) {
-                            // parses the string to search for
-                            refersTo = clientMessage.substring(strtWord + 10);
-                        }
-                        // calls function to return notes that meeet the 4 requirements
-                        Note[] result = a.getNotes(findColor, xc, yc, refersTo);
-                        if (result.length != 0) {
-                            for (Note d : result) {
-                                // sends the results to the client
-                                out.println(d.toString()+"\n");
+                                // sets the 3 search options to null
+                                String findColor = null;
+                                int xc = -1;
+                                int yc = -1;
+                                String refersTo = null;
+                                // check if the color is one of the request conditions
+                                int strt = clientMessage.indexOf("color=");
+
+                                // if color not found then check for next request condition
+                                if (strt != -1) {
+                                    // if not the only condition then parse the color
+                                    findColor = split[2];
+
+                                }
+                                // check if coordinates are one of the request conditions
+                                int strtCoor = clientMessage.indexOf("contains=");
+
+                                if (strtCoor != -1) {
+                                    // parses the coordinates depending on if it is the only condition
+                                    if (strt != -1) {
+                                        xc = strtol(split[4]);
+                                        yc = strtol(split[5]);
+                                    } else {
+                                        xc = strtol(split[2]);
+                                        yc = strtol(split[3]);
+                                    }
+                                }
+                                // checks if refersTo is one of the conditions
+                                int strtWord = clientMessage.indexOf("refersTo=");
+                                if (strtWord != -1) {
+                                    // parses the string to search for
+                                    refersTo = clientMessage.substring(strtWord + 10);
+                                }
+                                // calls function to return notes that meeet the 4 requirements
+                                Note[] result = a.getNotes(findColor, xc, yc, refersTo);
+                                if (result.length != 0) {
+                                    for (Note d : result) {
+                                        // sends the results to the client
+                                        out.println(d.toString() + "\n");
+                                    }
+                                } else {
+                                    // returns no matches
+                                    out.println("No matches found");
+                                }
+                                changingList = false;
+                                break;
                             }
                         } else {
-                            // returns no matches
-                            out.println("No matches found");
+                            for (Note n : notes) {
+                                out.println(n.toString());
+                            }
                         }
-                        changingList = false;
-                        break;
 
                     case "PIN":
                         // outputs the result, either Pin Added or Pin already exists
-                        if (split.length == 3) {
-                            out.println(a.changePin(strtol(split[1]), strtol(split[2]),
-                                    true));
-                        } else {
-                            out.println("Improper Command");
+                        if (split.length >= 3) {
+                            out.println(a.changePin(strtol(split[1]), strtol(split[2]), true));
                         }
                         changingList = false;
                         break;
 
                     case "UNPIN":
                         // outputs the result, either Pin Removed or Pin not found
-                        if (split.length == 3) {
-                            out.println(a.changePin((strtol(split[1])), strtol(split[2]),
-                                    false));
-                        } else {
-                            out.println("Improper Command");
+                        if (split.length >= 3) {
+                            out.println(a.changePin((strtol(split[1])), strtol(split[2]), false));
                         }
                         changingList = false;
                         break;
@@ -336,10 +337,6 @@ public class NoteServer {
                         requestDisconnect = true;
                         changingList = false;
                         break;
-
-                    default:
-                        out.println("Improper Command");
-                        changingList = false;
                     }
 
                 }
@@ -372,7 +369,7 @@ public class NoteServer {
 
     // function to create a new note and add it to the list of notes, in order based
     // on x and then y
-    public void newNote(int xCoor, int yCoor, int width, int height, String color, String post) {
+    public void newNote(int xCoor, int yCoor, int height, int width, String color, String post) {
         int i = 0;
         if (!notes.isEmpty()) {
             while (i < notes.size() && notes.get(i).getXCoor() < xCoor) {
@@ -383,7 +380,7 @@ public class NoteServer {
             }
 
         }
-        notes.add(i, new Note(xCoor, yCoor, width, height, color, post));
+        notes.add(i, new Note(xCoor, yCoor, height, width, color, post));
         return;
     }
 
@@ -429,26 +426,27 @@ public class NoteServer {
                     && a.getYCoor() + a.getHeight() > yCoor) {
                 if (putIn) {
                     // adds pin
-                    a.pin.add(new Pin(xCoor,yCoor));
+                    a.pin.add(new Pin(xCoor, yCoor));
                     if (a.getPin() == false) {
                         a.togglePin();
                     }
-                } else if (!putIn){
+                } else if (!putIn) {
                     // remove pin
                     int k;
-                    for (k=0;k<a.pin.size();k++){
-                        if (a.pin.get(k).getXCoor()==xCoor&&a.pin.get(k).getYCoor()==yCoor){
+                    for (k = 0; k < a.pin.size(); k++) {
+                        if (a.pin.get(k).getXCoor() == xCoor && a.pin.get(k).getYCoor() == yCoor) {
                             pins.remove(k);
                             break;
                         }
                     }
-                if (a.getPin() && a.pin.size() == 0) {
-                    a.togglePin();
+                    if (a.getPin() && a.pin.size() == 0) {
+                        a.togglePin();
+                    }
                 }
-            }
 
             }
-        }return;
+        }
+        return;
 
     }
 
